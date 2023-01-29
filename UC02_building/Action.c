@@ -13,7 +13,7 @@ web_set_sockets_option("SSL_VERSION", "2&3");
 lr_start_transaction("UC02_TC01_openMain");
 
 	web_url("um.mos.ru", 
-		"URL=https://um.mos.ru/", 
+		"URL=https://{host}/", 
 		"TargetFrame=", 
 		"Resource=0", 
 		"RecContentType=text/html", 
@@ -114,7 +114,7 @@ web_reg_save_param_regexp(
 lr_start_transaction("UC02_TC02_openHouse");
 
 	web_url("houses_2", 
-		"URL=https://um.mos.ru/houses", 
+		"URL=https://{host}/houses", 
 		"TargetFrame=", 
 		"Resource=0", 
 		"RecContentType=text/html", 
@@ -132,7 +132,7 @@ randFilter();
 lr_start_transaction("UC02_TC03_useFilter");
 
 	web_url("houses_4", 
-		"URL=https://um.mos.ru/houses?{filtr}", 
+		"URL=https://{host}/houses?{filtr}", 
 		"TargetFrame=", 
 		"Resource=0", 
 		"RecContentType=text/html", 
@@ -156,11 +156,11 @@ waste = time_elapsed * 1000;
 lr_wasted_time(waste); 
 
 	web_url("houses_5", 
-		"URL=https://um.mos.ru/api/v1/houses?page=1&filter{filterJSON}", 
+		"URL=https://{host}/api/v1/houses?page=1&filter{filterJSON}", 
 		"TargetFrame=", 
 		"Resource=0", 
 		"RecContentType=application/json", 
-		"Referer=https://um.mos.ru/houses?{filtr}", 
+		"Referer=https://{host}/houses?{filtr}", 
 		"Snapshot=t95.inf", 
 		"Mode=HTML", 
 		EXTRARES, 
@@ -191,7 +191,7 @@ lr_wasted_time(waste);
 
 
 	web_url("houseRand", 
-		"URL=https://um.mos.ru/houses/{houseRand}", 
+		"URL=https://{host}/houses/{houseRand}", 
 		"TargetFrame=", 
 		"Resource=0", 
 		"RecContentType=text/html", 
@@ -219,11 +219,11 @@ lr_start_transaction("UC02_TC04_listen");
 
 web_url("listen",	
 
-		"URL=https://um.mos.ru{audiofile}", 
+		"URL=https://{host}{audiofile}", 
 		"TargetFrame=", 
 		"Resource=0",
 		"RecContentType=audio/mpeg",
-		"Referer=https://um.mos.ru/routes/{routeRand}",
+		"Referer=https://{host}/routes/{routeRand}",
 		"Snapshot=t805.inf",
 		"Mode=HTML",
 		EXTRARES, 

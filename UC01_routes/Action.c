@@ -3,30 +3,16 @@
 #include <string.h>
 Action()
 {
-int rayonRoute;
-int routeType;
-int routesLength;
-int multimedia;
-int randNumFiltr;
-char randStrFiltr[30];
-char pahtFiltr[30] = "filters=";
-char pathRoutesLength[30] = "routesLength=";
-char categories[30] = "[categories]=";
-char media[30] = "[media]=";
-char lengthTo[30] = "[length][to]=";
-char lengthFrom[30] = "[length][from]=";
-char lengthToNum[30];
 
 double time_elapsed, duration, waste;
 merc_timer_handle_t timer;
-
 
 web_set_sockets_option("SSL_VERSION", "2&3");
 
 lr_start_transaction("UC01_TC01_openMain");
 
 	web_url("um.mos.ru", 
-		"URL=https://um.mos.ru/", 
+		"URL=https://{host}/", 
 		"TargetFrame=", 
 		"Resource=0", 
 		"RecContentType=text/html", 
@@ -84,7 +70,7 @@ web_reg_save_param_regexp(
 lr_start_transaction("UC01_TC02_openRoutes");
 
 	web_url("routes", 
-		"URL=https://um.mos.ru/routes", 
+		"URL=https://{host}/routes", 
 		"TargetFrame=", 
 		"Resource=0", 
 		"RecContentType=text/html", 
@@ -96,53 +82,8 @@ lr_start_transaction("UC01_TC02_openRoutes");
 	
 lr_end_transaction("UC01_TC02_openRoutes", LR_AUTO);
 
-
-
-srand(time(NULL));
-
-switch(rand() % 4) {
-	case 0:
-		randNumFiltr = rand() % (atoi(lr_eval_string("{rayonRoute_count}"))) + 1;
-		sprintf(randStrFiltr,"{rayonRoute_%d}", randNumFiltr);
-		strcat(pahtFiltr, randStrFiltr);
-		strcat(categories, randStrFiltr);
-		lr_save_string(lr_eval_string(pahtFiltr), "filtr");
-		lr_save_string(lr_eval_string(categories), "filterJSON");
-		break;
-	case 1:
-		randNumFiltr = rand() % (atoi(lr_eval_string("{routeType_count}"))) + 1;
-		sprintf(randStrFiltr,"{routeType_%d}", randNumFiltr);
-		strcat(pahtFiltr, randStrFiltr);
-		strcat(categories, randStrFiltr);
-		lr_save_string(lr_eval_string(pahtFiltr), "filtr");
-		lr_save_string(lr_eval_string(categories), "filterJSON");
-		break;
-	case 2:
-		randNumFiltr = rand() % (atoi(lr_eval_string("{routesLength_count}"))) + 1;
-		sprintf(randStrFiltr,"{routesLength_%d}", randNumFiltr);
-		sprintf(lengthToNum,"{routesLengthNum_%d}", randNumFiltr);
-		strcat(pathRoutesLength, randStrFiltr);
-		if (randNumFiltr == 4) {
-			strcat(lengthFrom, lengthToNum);
-			lr_save_string(lr_eval_string(lengthFrom), "filterJSON");
-		} else {
-			strcat(lengthTo, lengthToNum);
-			lr_save_string(lr_eval_string(lengthTo), "filterJSON");
-		}
-		lr_save_string(lr_eval_string(pathRoutesLength), "filtr");
-		break;
-	case 3:
-		randNumFiltr = rand() % (atoi(lr_eval_string("{multimedia_count}"))) + 1;
-		sprintf(randStrFiltr,"{multimedia_%d}", randNumFiltr);
-		strcat(pahtFiltr, randStrFiltr);
-		strcat(media, randStrFiltr);
-		lr_save_string(lr_eval_string(pahtFiltr), "filtr");
-		lr_save_string(lr_eval_string(media), "filterJSON");
-		break;
-	default :
-		break;
-}
 		
+randFilter ();
 
 		
 /*web_reg_save_param_regexp(
@@ -159,7 +100,7 @@ switch(rand() % 4) {
 lr_start_transaction("UC01_TC03_chooseRandFilterAndRoute");
 
 	web_url("routes_3", 
-		"URL=https://um.mos.ru/routes?{filtr}", 
+		"URL=https://{host}/routes?{filtr}", 
 		"TargetFrame=", 
 		"Resource=0", 
 		"RecContentType=text/html", 
@@ -182,11 +123,11 @@ waste = time_elapsed * 1000;
 lr_wasted_time(waste); 
 
 	web_url("routes_6", 
-		"URL=https://um.mos.ru/api/v1/routes?page=1&filter{filterJSON}",
+		"URL=https://{host}/api/v1/routes?page=1&filter{filterJSON}",
 		"TargetFrame=", 
 		"Resource=0", 
 		"RecContentType=application/json", 
-		"Referer=https://um.mos.ru/routes?{filtr}", 
+		"Referer=https://{host}/routes?{filtr}", 
 		"Snapshot=t754.inf", 
 		"Mode=HTML", 
 		LAST);
@@ -225,14 +166,14 @@ web_reg_save_param_regexp(
 		
 	time_elapsed = lr_end_timer(timer);
 	waste = time_elapsed * 1000;
-	lr_wasted_time(waste); 
-	
+	lr_wasted_time(waste); 	
+
 	web_url("routeRand", 
-		"URL=https://um.mos.ru/routes/{routeRand}",
+		"URL=https://{host}/routes/{routeRand}",
 		"TargetFrame=", 
 		"Resource=0", 
 		"RecContentType=text/html", 
-		"Referer=https://um.mos.ru/routes?{filtr}", 
+		"Referer=https://{host}/routes?{filtr}", 
 		"Snapshot=t804.inf", 
 		"Mode=HTML", 
 		EXTRARES,  
@@ -266,7 +207,7 @@ web_reg_save_param_regexp(
 
 */
 
-if (strcmp(lr_eval_string("{audiofile}"),"Success") ==0 ) {
+if (strcmp(lr_eval_string("{audiofile}"),"") != 0) {
 	
 web_add_header("Accept","audio/webm,audio/ogg,audio/wav,audio/*;q=0.9,application/ogg;q=0.7,video/*;q=0.6,*/*;q=0.5");
 web_add_header("Range", "bytes=0-");
@@ -279,11 +220,11 @@ web_add_header("Accept-Encoding", "identity");
 lr_start_transaction("UC01_TC04_listen");
 web_url("listen",	
 
-		"URL=https://um.mos.ru{audiofile}", 
+		"URL=https://{host}{audiofile}", 
 		"TargetFrame=", 
 		"Resource=0",
 		"RecContentType=audio/mpeg",
-		"Referer=https://um.mos.ru/routes/{routeRand}",
+		"Referer=https://{host}/routes/{routeRand}",
 		"Snapshot=t805.inf",
 		"Mode=HTML",
 		EXTRARES, 
@@ -301,7 +242,7 @@ lr_start_transaction("UC01_TC05_openRandHouse");
 
 
 	web_url("object", 
-		"URL=https://um.mos.ru{objectRand}", 
+		"URL=https://{host}{objectRand}", 
 		"TargetFrame=", 
 		"Resource=0", 
 		"RecContentType=text/html", 
