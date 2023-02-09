@@ -1,16 +1,16 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
 Action()
 {
 	
+int randNumFilter;
 double time_elapsed, duration, waste;
 merc_timer_handle_t timer;
-	
-//web_set_sockets_option("SSL_VERSION", "TLS1.1");
+
 web_set_sockets_option("SSL_VERSION", "2&3");
-lr_start_transaction("UC02_TC01_openMain");
+
+lr_start_transaction("UC02_building");
+
+
+lr_start_transaction("UC02_TR01_openMain");
 
 	web_url("um.mos.ru", 
 		"URL=https://{host}/", 
@@ -23,95 +23,22 @@ lr_start_transaction("UC02_TC01_openMain");
 		EXTRARES, 
 		LAST);
 
-lr_end_transaction("UC02_TC01_openMain", LR_AUTO);
+lr_end_transaction("UC02_TR01_openMain", LR_AUTO);
 
-	
-web_reg_save_param_regexp(
-		"ParamName=administrativnyyOkrug",
-		"RegExp=\\{\\\"id\\\"\\:\\d*,\\\"slug\\\":\\\"([\\w-]*)\\\"[\\w-:,\\\"]*parent\\\":388",
-		"NotFound=error",
-		"Group=1",
-		"Ordinal=All",
-		LAST);
+
+lr_think_time(rand() % 5 + 1);
+
 
 web_reg_save_param_regexp(
-		"ParamName=architecturalStyle",
-		"RegExp=\\{\\\"id\\\"\\:\\d*,\\\"slug\\\":\\\"([\\w-]*)\\\"[\\w-:,\\\".\\d/]*parent\\\":2",
-		"NotFound=error",
+		"ParamName=path",
+		"RegExp=page\\\":\\\"/houses\\\".*\\\"buildId\\\":\\\"(\\w*)",
+		"NotFound=warning",
 		"Group=1",
-		"Ordinal=All",
+		"Ordinal=1",
 		LAST);
 
-web_reg_save_param_regexp(
-		"ParamName=virtualTours",
-		"RegExp=\\{\\\"id\\\"\\:\\d*,\\\"slug\\\":\\\"([\\w-]*)\\\"[\\w-:,\\\".\\d/]*parent\\\":6",
-		"NotFound=error",
-		"Group=1",
-		"Ordinal=All",
-		LAST);
-	
-web_reg_save_param_regexp(
-		"ParamName=cultb",
-		"RegExp=\\{\\\"id\\\"\\:\\d*,\\\"slug\\\":\\\"([\\w-]*)\\\"[\\w-:,\\\".\\d/]*parent\\\":8",
-		"NotFound=error",
-		"Group=1",
-		"Ordinal=All",
-		LAST);
-	
-web_reg_save_param_regexp(
-		"ParamName=memorialValueHouse",
-		"RegExp=\\{\\\"id\\\"\\:\\d*,\\\"slug\\\":\\\"([\\w- ]*)\\\"[\\w-:,\\\".\\d/]*parent\\\":4",
-		"NotFound=error",
-		"Group=1",
-		"Ordinal=All",
-		LAST);
-	
-web_reg_save_param_regexp(
-		"ParamName=moskovskayaRestavraciya",
-		"RegExp=\\{\\\"id\\\"\\:\\d*,\\\"slug\\\":\\\"([\\w- ]*)\\\",[^,]*[\\w-:,\\\".\\d/ ]*parent\\\":5",
-		"NotFound=error",
-		"Group=1",
-		"Ordinal=All",
-		LAST);
-	
-web_reg_save_param_regexp(
-		"ParamName=purposeHouse",
-		"RegExp=\\{\\\"id\\\"\\:\\d*,\\\"slug\\\":\\\"([\\w- ]*)\\\",[^,]*[\\w-:,\\\".\\d/ ]*parent\\\":3",
-		"NotFound=error",
-		"Group=1",
-		"Ordinal=All",
-		LAST);
-		
-web_reg_save_param_regexp(
-		"ParamName=age",
-		"RegExp=\\{\\\"id\\\"\\:\\d*,\\\"slug\\\":\\\"([\\w- ]*)\\\",[^,]*[\\w-:,\\\".\\d/ ]*parent\\\":1",
-		"NotFound=error",
-		"Group=1",
-		"Ordinal=All",
-		LAST);
-	
 
-/*
-web_reg_save_param_regexp(
-		"ParamName=categories",
-		"RegExp=\\{\\\"id\\\"\\:\\d*,\\\"slug\\\":\\\"([\\w- ]*)\\\"[\\w-:,\\\".\\d/+\\[\\]+\\u0401\\u0451\\u0410-\\u044f ]*\\\"entitySlug\\\":\\\"categories\\\"",
-		"NotFound=error",
-		"Group=1",
-		"Ordinal=All",
-		LAST);
-*/
-
-web_reg_save_param_regexp(
-		"ParamName=multimedia",
-		"RegExp=\\{\\\"id\\\":\\\"(\\w*)\\\",[\\w\\d\\\",:]+:\\[\\]\\}",
-		"NotFound=error",
-		"Group=1",
-		"Ordinal=All",
-		LAST);
-		
-	
-
-lr_start_transaction("UC02_TC02_openHouse");
+lr_start_transaction("UC02_TR02_openHouse");
 
 	web_url("houses_2", 
 		"URL=https://{host}/houses", 
@@ -123,13 +50,28 @@ lr_start_transaction("UC02_TC02_openHouse");
 		"Mode=HTML", 
 		EXTRARES,
 		LAST);
-lr_end_transaction("UC02_TC02_openHouse",LR_AUTO);
+		
+randNumFilter = randFilterReg();
+		
+	web_url("houses_7", 
+		"URL=https://um.mos.ru/_next/data/{path}/ru/houses.json",
+		"TargetFrame=", 
+		"Resource=0", 
+		"RecContentType=application/json", 
+		"Referer=https://{host}/routes", 
+		"Snapshot=t687.inf", 
+		"Mode=HTML", 
+		LAST);
+		
+lr_end_transaction("UC02_TR02_openHouse",LR_AUTO);
 
 
-randFilter();
+randFilter(randNumFilter);
+
+lr_think_time(rand() % 5 + 1);
 
 
-lr_start_transaction("UC02_TC03_useFilter");
+lr_start_transaction("UC02_TR03_useFilter");
 
 	web_url("houses_4", 
 		"URL=https://{host}/houses?{filtr}", 
@@ -169,7 +111,8 @@ lr_wasted_time(waste);
 timer = lr_start_timer();
 	
 if (atoi(lr_eval_string("{house_count}")) == 0) {
-	lr_end_transaction("UC02_TC03_useFilter", LR_AUTO);
+	lr_end_transaction("UC02_TR03_useFilter", LR_FAIL);
+	lr_end_transaction("UC02_building", LR_FAIL);
 	return 0;
 }
 	
@@ -201,9 +144,11 @@ lr_wasted_time(waste);
 		EXTRARES, 
 		LAST);
 		
-lr_end_transaction("UC02_TC03_useFilter",LR_AUTO);
+lr_end_transaction("UC02_TR03_useFilter",LR_AUTO);
 
+lr_think_time(rand() % 5 + 1);
 
+lr_start_transaction("UC02_TR04_listen");
 
 if (strcmp(lr_eval_string("{audiofile}"),"") != 0) {
 	
@@ -213,9 +158,6 @@ web_add_header("Sec-Fetch-Dest", "audio");
 web_add_header("Sec-Fetch-Mode", "no-cors");
 web_add_header("Sec-Fetch-Site", "same-origin");
 web_add_header("Accept-Encoding", "identity");
-
-
-lr_start_transaction("UC02_TC04_listen");
 
 web_url("listen",	
 
@@ -228,9 +170,15 @@ web_url("listen",
 		"Mode=HTML",
 		EXTRARES, 
 		LAST);
-lr_end_transaction("UC02_TC04_listen", LR_AUTO);
-
+		
+} else {
+lr_fail_trans_with_error("UC02_TR04_listen");	
+lr_fail_trans_with_error("UC02_building");	
 }
+
+lr_end_transaction("UC02_TR04_listen", LR_AUTO);
+
+lr_end_transaction("UC02_building", LR_AUTO);
 
 	return 0;
 }

@@ -1,15 +1,20 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+typedef enum {false, true} bool;
+
 Action()
 {
+
+int randFilterNum;
 
 double time_elapsed, duration, waste;
 merc_timer_handle_t timer;
 
 web_set_sockets_option("SSL_VERSION", "2&3");
 
-lr_start_transaction("UC01_TC01_openMain");
+
+lr_start_transaction("UC01_routes");
+
+
+lr_start_transaction("UC01_TR01_openMain");
 
 	web_url("um.mos.ru", 
 		"URL=https://{host}/", 
@@ -22,52 +27,22 @@ lr_start_transaction("UC01_TC01_openMain");
 		EXTRARES, 
 		LAST);
 
-lr_end_transaction("UC01_TC01_openMain", LR_AUTO);
+lr_end_transaction("UC01_TR01_openMain", LR_AUTO);
+
+
+lr_think_time(rand() % 5 + 1);
+
 
 web_reg_save_param_regexp(
-		"ParamName=rayonRoute",
-		"RegExp=\\{\\\"id\\\":\\d*,\\\"slug\\\":\\\"([\\w-]+)\\\",\\\"image\\\":\\w*,\\\"active\\\":\\w*,\\\"parent\\\":458",
-		"NotFound=error",
+		"ParamName=path",
+		"RegExp=page\\\":\\\"/routes\\\".*\\\"buildId\\\":\\\"(\\w*)",
+		"NotFound=warning",
 		"Group=1",
-		"Ordinal=All",
-		LAST);
-		
-web_reg_save_param_regexp(
-		"ParamName=routeType",
-		"RegExp=\\{\\\"id\\\":\\d*,\\\"slug\\\":\\\"([\\w\\d-]+)\\\",\\\"image\\\":\\w*,\\\"active\\\":\\w*,\\\"parent\\\":242",
-		"NotFound=error",
-		"Group=1",
-		"Ordinal=All",
-		LAST);
-
-web_reg_save_param_regexp(
-		"ParamName=routesLength",
-		"RegExp=\\\"slug\\\":\\\"(\\w*)\\\",\\\"nameWithT\\\":\\\"\\w*\\\"",
-		"NotFound=error",
-		"Group=1",
-		"Ordinal=All",
-		LAST);
-		
-web_reg_save_param_regexp(
-		"ParamName=routesLengthNum",
-		"RegExp=\\\"slug\\\":\\\"(\\w*)\\\",\\\"nameWithT\\\":\\\"\\w*\\\"[,\\\"\\w:\\[\\]]*\\\":(\\d+)",
-		"NotFound=error",
-		"Group=2",
-		"Ordinal=All",
+		"Ordinal=1",
 		LAST);
 
 
-web_reg_save_param_regexp(
-		"ParamName=multimedia",
-		"RegExp=\\{\\\"id\\\":\\\"(\\w*)\\\",[\\w\\d\\\",:]+:\\[\\]\\}",
-		"NotFound=error",
-		"Group=1",
-		"Ordinal=All",
-		LAST);
-
-
-
-lr_start_transaction("UC01_TC02_openRoutes");
+lr_start_transaction("UC01_TR02_openRoutes");
 
 	web_url("routes", 
 		"URL=https://{host}/routes", 
@@ -79,25 +54,28 @@ lr_start_transaction("UC01_TC02_openRoutes");
 		"Mode=HTML", 
 		EXTRARES, 
 		LAST);
+		
+
+randFilterNum = randFilterReg();
 	
-lr_end_transaction("UC01_TC02_openRoutes", LR_AUTO);
-
-		
-randFilter ();
-
-		
-/*web_reg_save_param_regexp(
-		"ParamName=route",
-		"RegExp=\\{\\\"id\\\":\\d*,\\\"slug\\\":\\\"([\\w\\d-]+)\\\",\\\"time\\\"",
-		"NotFound=warning",
-		"Group=1",
-		"Ordinal=All",
+	web_url("routes_7", 
+		"URL=https://um.mos.ru/_next/data/{path}/ru/routes.json",
+		"TargetFrame=", 
+		"Resource=0", 
+		"RecContentType=application/json", 
+		"Referer=https://{host}/routes", 
+		"Snapshot=t688.inf", 
+		"Mode=HTML", 
 		LAST);
-*/		
+	
+lr_end_transaction("UC01_TR02_openRoutes", LR_AUTO);
+	
 
-
+randFilter(randFilterNum);
 		
-lr_start_transaction("UC01_TC03_chooseRandFilterAndRoute");
+lr_think_time(rand() % 5 + 1);
+		
+lr_start_transaction("UC01_TR03_chooseRandFilterAndRoute");
 
 	web_url("routes_3", 
 		"URL=https://{host}/routes?{filtr}", 
@@ -135,7 +113,12 @@ lr_wasted_time(waste);
 	timer = lr_start_timer();
 	
 	if (atoi(lr_eval_string("{route_count}")) == 0) {
-	lr_end_transaction("UC01_TC03_chooseRandFilterAndRoute", LR_AUTO);
+		lr_fail_trans_with_error("UC01_TR03_chooseRandFilterAndRoute");
+
+		lr_fail_trans_with_error("UC01_routes");
+	
+	lr_end_transaction("UC01_TR03_chooseRandFilterAndRoute", LR_FAIL);
+	lr_end_transaction("UC01_routes", LR_FAIL);
 	return 0;
 	}
 
@@ -179,11 +162,11 @@ web_reg_save_param_regexp(
 		EXTRARES,  
 		LAST);
 
-lr_end_transaction("UC01_TC03_chooseRandFilterAndRoute", LR_AUTO);
+lr_end_transaction("UC01_TR03_chooseRandFilterAndRoute", LR_AUTO);
 
+lr_think_time(rand() % 5 + 1);
 
-
-/*while (complite1) {
+/*while (complite) {
 	
 leftRange = chunkRange * countRange;
 
@@ -191,7 +174,7 @@ rightRange = chunkRange * (countRange + 1);
 
 if ((atoi(lr_eval_string("{totalLength}")) - rightRange) <= chunkRange && countRange !=0) {
 	rightRange = atoi(lr_eval_string("{totalLength}"));
-	complite1 = false;
+	complite = false;
 }
 
 lr_save_int(leftRange, "leftRange");
@@ -206,9 +189,11 @@ web_reg_save_param_regexp(
 		LAST);
 
 */
+lr_start_transaction("UC01_TR04_listen");
 
 if (strcmp(lr_eval_string("{audiofile}"),"") != 0) {
 	
+
 web_add_header("Accept","audio/webm,audio/ogg,audio/wav,audio/*;q=0.9,application/ogg;q=0.7,video/*;q=0.6,*/*;q=0.5");
 web_add_header("Range", "bytes=0-");
 web_add_header("Sec-Fetch-Dest", "audio");
@@ -216,8 +201,6 @@ web_add_header("Sec-Fetch-Mode", "no-cors");
 web_add_header("Sec-Fetch-Site", "same-origin");
 web_add_header("Accept-Encoding", "identity");
 
-
-lr_start_transaction("UC01_TC04_listen");
 web_url("listen",	
 
 		"URL=https://{host}{audiofile}", 
@@ -229,8 +212,18 @@ web_url("listen",
 		"Mode=HTML",
 		EXTRARES, 
 		LAST);
-lr_end_transaction("UC01_TC04_listen", LR_AUTO);
+
+
+lr_end_transaction("UC01_TR04_listen", LR_AUTO);
+} else {
+
+	lr_fail_trans_with_error("UC01_TR04_listen");
+
+lr_end_transaction("UC01_TR04_listen", LR_FAIL);
+lr_fail_trans_with_error("UC01_routes");	
 }
+
+
 /*countRange = countRange + 1;
 
 }
@@ -238,7 +231,9 @@ lr_end_transaction("UC01_TC04_listen", LR_AUTO);
 
 lr_save_string(lr_paramarr_random("object"), "objectRand");
 
-lr_start_transaction("UC01_TC05_openRandHouse");
+lr_think_time(rand() % 5 + 1);
+
+lr_start_transaction("UC01_TR05_openRandHouse");
 
 
 	web_url("object", 
@@ -252,8 +247,9 @@ lr_start_transaction("UC01_TC05_openRandHouse");
 		EXTRARES, 
 		LAST);
 		
-lr_end_transaction("UC01_TC05_openRandHouse", LR_AUTO);
+lr_end_transaction("UC01_TR05_openRandHouse", LR_AUTO);
 
+lr_end_transaction("UC01_routes", LR_AUTO);
 
 	return 0;
 }
